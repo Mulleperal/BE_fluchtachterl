@@ -1,12 +1,15 @@
 package com.example.demo.model
 
 import jakarta.persistence.*
+import org.springframework.web.multipart.MultipartFile
 
 @Entity
 @Table(name = "product")
 data class Product(
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     var id: Long? = null,
+    @Transient
+    var file: MultipartFile? = null, // new field for file upload
     @Column(unique = true)
     var name: String,
     var img: String? = null,
