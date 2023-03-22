@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*
 import java.io.File
 import java.nio.file.Paths
 import java.util.*
+import kotlin.system.exitProcess
 
 @RestController
 @RequestMapping("api/v1/product")
@@ -58,62 +59,40 @@ class ProductController(val service: ProductService, val resourceLoader: Resourc
         return service.create(data) // save the Product object to the repository
     }
 
-//    @GetMapping("/products/{productId}/image-url")
-//fun getProductImageUrl(@PathVariable productId: Long): ResponseEntity<Resource> {
-//    val product = service.getById(productId)
-////    val imageUrl = "http://localhost:8080/pictures/${product.img}"
-//    val resource: Resource = resourceLoader.getResource("classpath:static/${product.img}")
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.IMAGE_JPEG)
-//                .body(resource)
-//}
-
-//    @GetMapping("/products/{productId}/image-url")
-//    fun getProductImageUrl(@PathVariable productId: Long): ResponseEntity<Resource> {
-//        print("asdfasdfasdfasdf")
-//        val product = service.getById(productId)
-//        val imagePath = "classpath:static/${product.img}"
-//        print(imagePath)
-//        print("asdfasdfasdf")
-//        val resource: Resource = resourceLoader.getResource(imagePath)
-//        val contentType = if (product.img!!.endsWith(".jpg")) {
-//            MediaType.IMAGE_JPEG
-//        } else {
-//            MediaType.IMAGE_PNG
-//        }
-//
-//        print(imagePath)
-//        return ResponseEntity.ok()
-//            .contentType(contentType)
-//            .body(resource)
-//    }
 
 
     //    @GetMapping("/image/{imageName}")
-    @GetMapping("/products/{productId}/image-url")
-
-    @ResponseBody
-    fun getImage(@PathVariable productId: Long): ResponseEntity<ByteArrayResource> {
-        val product = service.getById(productId)
-        val resource = resourceLoader.getResource("classpath:static/${product.img}")
-        val inputStream = resource.inputStream
-        val bytes = inputStream.readAllBytes()
-        val byteArrayResource = ByteArrayResource(bytes)
-
-        return ResponseEntity
-            .ok()
-            .contentLength(bytes.size.toLong())
-            .contentType(MediaType.IMAGE_PNG)
-            .body(byteArrayResource)
-    }
 
 
-    @PostMapping("/update")
+
+
+    @PutMapping("/update/{id}")
     @ResponseStatus(HttpStatus.OK)
     fun updateProduct(
         @Valid
-        @RequestBody data: Product
-    ): Product = service.updateProduct(data)
+        @ModelAttribute data: Product,
+        @PathVariable id: Long,
+    ): Product {
+        val existingProduct = service.getById(id)
+
+        print(existingProduct)
+
+        existingProduct.name = data.name
+        existingProduct.description = data.description
+        existingProduct.category = data.category
+
+        val file = data.file
+        if (file != null && !file.isEmpty) {
+            val fileName = "${UUID.randomUUID()}.${file.originalFilename!!.substringAfterLast(".")}"
+            val path = Paths.get("").toAbsolutePath().toString()
+            file.transferTo(File("C:/Users/mlind/WebstormProjects/FE_Fluchtachterl/src/assets/$fileName")) // save the file to the pictures folder
+            existingProduct.img = fileName
+        }
+
+        return service.updateProduct(existingProduct)
+    }
+
+//    = service.updateProduct(data)
 
     @PostMapping("/delete")
     @ResponseStatus(HttpStatus.OK)
