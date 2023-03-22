@@ -94,10 +94,12 @@ class ProductController(val service: ProductService, val resourceLoader: Resourc
 
 //    = service.updateProduct(data)
 
-    @PostMapping("/delete")
+    @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     fun deleteUser(
-        @Valid
-        @RequestBody data: Product
-    ) = service.deleteProduct(data)
+        @PathVariable id: Long,
+    ) {
+        val existingProduct = service.getById(id)
+        service.deleteProduct(existingProduct)
+    }
 }
